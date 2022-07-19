@@ -21,17 +21,17 @@ namespace Pharmacy.Controllers
 
         public static List<User> users = new List<User>()
         {
-            new User(){Id = 1,Name = "Ibrahim" ,Location = "Gaza", IsDeleted = false},
-            new User(){Id = 2,Name = "Ahmed" ,Location = "KhanYunis", IsDeleted = false},
-            new User(){Id = 3,Name = "Ali" ,Location = "Rafah", IsDeleted = true},
+            new User(){Id = 1,Name = "Ibrahim" ,Location = "Gaza", IsDeleted = false  },
+            new User(){Id = 2,Name = "Ahmed" ,Location = "KhanYunis", IsDeleted = false },
+            new User(){Id = 3,Name = "Ali" ,Location = "Rafah", IsDeleted = true },
         };
 
         [HttpGet]
         public IActionResult getAllUsers()
         {
-            var list = users.Where(x => x.IsDeleted = false).ToList();
-            return Ok(new { success = true, message = "success", code = success, users = users.Where(x => x.IsDeleted = false).ToList() });
-            //   return Ok(new { success = true, message = "success", code = success, users = users });
+            //  var list = users.Where(x => x.IsDeleted = false).ToList();
+            //   return Ok(new { success = true, message = "success", code = success, users = users.Where(x => x.IsDeleted = false).ToList() });
+            return Ok(new { success = true, message = "success", code = success, users = users });
         }
 
         [HttpGet("{Id}")]
