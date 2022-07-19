@@ -19,23 +19,25 @@ namespace Pharmacy.Controllers
         public static int notFound = 404;
         public static int conflict = 502;
 
-        public static List<User> users = new List<User>() {
-                new User(){ Id = 1,Name  = "Ibrahim" ,Location=   "Gaza"},
-                new User(){Id = 2,Name  = "Ahmed" ,Location=   "Gaza"},
-                new User(){Id = 3,Name  = "Ali" ,Location=   "Gaza"},
+        public static List<User> users = new List<User>()
+        {
+            new User(){Id = 1,Name = "Ibrahim" ,Location = "Gaza", IsDeleted = false},
+            new User(){Id = 2,Name = "Ahmed" ,Location = "KhanYunis", IsDeleted = false},
+            new User(){Id = 3,Name = "Ali" ,Location = "Rafah", IsDeleted = true},
         };
-
 
         [HttpGet]
         public IActionResult getAllUsers()
         {
-            return Ok(new { success = true, message = "success", code = success, users = users });
+            var list = users.Where(x => x.IsDeleted = false).ToList();
+            return Ok(new { success = true, message = "success", code = success, users = users.Where(x => x.IsDeleted = false).ToList() });
+            //   return Ok(new { success = true, message = "success", code = success, users = users });
         }
 
         [HttpGet("{Id}")]
         public IActionResult GetUserById(int Id)
         {
-            var currentUser = users.Where(x => x.Id == Id).FirstOrDefault();
+            var currentUser = users.Where(x => x.Id == Id && x.IsDeleted == false).FirstOrDefault();
             if (currentUser == null)
             {
                 return BadRequest(new { success = false, message = "user not found", code = invalidValue });
@@ -57,13 +59,14 @@ namespace Pharmacy.Controllers
             {
                 return BadRequest(new { success = false, message = "Invalid Empty Name", code = invalidValue });
             }
-            var currentUser = users.Where(x => x.Id == user.Id).SingleOrDefault();
+            var currentUser = users.Where(x => x.Id == user.Id && x.IsDeleted == false).SingleOrDefault();
             if (currentUser != null)
             {
                 return Conflict(new { success = false, message = "Duplicate Id", code = conflict });
             }
             users.Add(user);
-            return CreatedAtAction(nameof(GetUserById), new { Id = user.Id }, new { success = true, message = "Created", code = created, user = user });
+            return CreatedAtAction(nameof(GetUserById), new { Id = user.Id },
+                new { success = true, message = "Created", code = created, user = user });
         }
 
         [HttpPut]
@@ -77,7 +80,7 @@ namespace Pharmacy.Controllers
             {
                 return BadRequest(new { success = false, message = "Invalid Empty Name", code = invalidValue });
             }
-            var currentUser = users.Where(x => x.Id == user.Id).SingleOrDefault();
+            var currentUser = users.Where(x => x.Id == user.Id && x.IsDeleted == false).SingleOrDefault();
             if (currentUser == null)
             {
                 return NotFound(new { success = false, message = "User Not Found", code = notFound });
@@ -89,13 +92,13 @@ namespace Pharmacy.Controllers
         }
 
         [HttpPatch("{id}")]
-        public IActionResult updateUserPartially(int id, [FromHeader] String token, /*[FromForm]*/ JsonPatchDocument authorPatch)
+        public IActionResult updateUserPartially(int id, [FromHeader] String token, JsonPatchDocument authorPatch)
         {
             if (String.IsNullOrWhiteSpace(token))
             {
                 return Unauthorized(new { success = false, message = "Invalid token", code = unauthorized });
             }
-            var currentUser = users.Where(x => x.Id == id).SingleOrDefault();
+            var currentUser = users.Where(x => x.Id == id && x.IsDeleted == false).SingleOrDefault();
             if (currentUser == null)
             {
                 return NotFound(new { success = false, message = "User Not Found", code = notFound });
@@ -111,12 +114,18 @@ namespace Pharmacy.Controllers
             {
                 return Unauthorized(new { success = false, message = "Invalid token", code = unauthorized });
             }
-            var currentUser = users.Where(x => x.Id == id).SingleOrDefault();
+            var currentUser = users.Where(x => x.Id == id && x.IsDeleted == false).SingleOrDefault();
             if (currentUser == null)
             {
                 return NotFound(new { success = false, message = "User Not Found", code = notFound });
             }
-            users.Remove(currentUser);
+            var currentSkills = SkillsController.skills.Where(x => x == currentUser.Skills.FirstOrDefault()).FirstOrDefault();
+            if (currentSkills != null)
+            {
+                SkillsController.skills.Remove(currentSkills);
+            }
+            //   users.Remove(currentUser);
+            currentUser.IsDeleted = true;
             return Ok(new { success = true, message = "delete successfull", code = success, user = currentUser });
         }
 

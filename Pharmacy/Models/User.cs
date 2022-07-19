@@ -13,8 +13,8 @@ namespace Pharmacy.Models
         public int Id { get; set; }
         public String Name { get; set; }
         public String Location { get; set; }
+        public Boolean IsDeleted { get; set; }
         public List<Skills> Skills { get; set; } = new List<Skills>();
-
 
     }
 }
