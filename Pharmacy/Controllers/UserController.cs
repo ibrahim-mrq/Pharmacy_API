@@ -1,13 +1,17 @@
-﻿using Microsoft.AspNetCore.JsonPatch;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Pharmacy.Models;
+using Pharmacy.Models.Helper;
+using Pharmacy.Models.RequestDTO;
+using Pharmacy.Models.ResponseDTO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Pharmacy.Controllers
 {
-    [Route("api/user")]
+    [Route("api")]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -26,30 +30,45 @@ namespace Pharmacy.Controllers
             new User(){Id = 3,Name = "Ali" ,Location = "Rafah", IsDeleted = true },
         };
 
-        [HttpGet]
-        public IActionResult getAllUsers()
+        public readonly IMapper Mapper;
+
+        public UserController(IMapper mapper)
         {
-            //  var list = users.Where(x => x.IsDeleted = false).ToList();
-            //   return Ok(new { success = true, message = "success", code = success, users = users.Where(x => x.IsDeleted = false).ToList() });
-            return Ok(new { success = true, message = "success", code = success, users = users });
+            Mapper = mapper;
         }
 
-        [HttpGet("{Id}")]
-        public IActionResult GetUserById(int Id)
+        [HttpGet(), Route("getAllUsers")]
+        public IActionResult getAllUsers()
         {
-            var currentUser = users.Where(x => x.Id == Id && x.IsDeleted == false).FirstOrDefault();
+            return Ok(new
+            {
+                success = true,
+                message = "success",
+                code = success,
+                users = users
+                //.Where(x => x.IsDeleted = false)
+                .Select(x => UserHelper.MapDomainToResponse(x))
+            });
+        }
+
+        [HttpGet(), Route("getUserById/{Id}")]
+        public IActionResult GetUserById([FromRoute] int Id, [FromHeader] String token)
+        {
+            if (String.IsNullOrWhiteSpace(token))
+            {
+                return Unauthorized(new { success = false, message = "Invalid token", code = unauthorized });
+            }
+            var currentUser = users.Where(x => x.Id == Id && x.IsDeleted == false).SingleOrDefault();
             if (currentUser == null)
             {
                 return BadRequest(new { success = false, message = "user not found", code = invalidValue });
             }
-            else
-            {
-                return Ok(new { success = true, message = "success", code = success, user = currentUser });
-            }
+            return Ok(new { success = true, message = "success", code = success, user = Mapper.Map<UserResponseDTO>(currentUser) });
+
         }
 
-        [HttpPost]
-        public IActionResult AddUser([FromForm] User user, [FromHeader] String token)
+        [HttpPost(), Route("createUser")]
+        public IActionResult AddUser([FromForm] UserAddRequestDTO user, [FromHeader] String token)
         {
             if (String.IsNullOrWhiteSpace(token))
             {
@@ -59,18 +78,15 @@ namespace Pharmacy.Controllers
             {
                 return BadRequest(new { success = false, message = "Invalid Empty Name", code = invalidValue });
             }
-            var currentUser = users.Where(x => x.Id == user.Id && x.IsDeleted == false).SingleOrDefault();
-            if (currentUser != null)
-            {
-                return Conflict(new { success = false, message = "Duplicate Id", code = conflict });
-            }
-            users.Add(user);
-            return CreatedAtAction(nameof(GetUserById), new { Id = user.Id },
-                new { success = true, message = "Created", code = created, user = user });
+            var currentUser = Mapper.Map<User>(user);
+            currentUser.Id = users.Max(x => x.Id) + 1;
+            users.Add(currentUser);
+            return CreatedAtAction(nameof(GetUserById), new { Id = currentUser.Id },
+                new { success = true, message = "Created", code = created, user = UserHelper.MapDomainToResponse(currentUser) });
         }
 
-        [HttpPut]
-        public IActionResult updateUser([FromForm] User user, [FromHeader] String token)
+        [HttpPut(), Route("updateUser/{Id}")]
+        public IActionResult UpdateUser([FromRoute] int Id, [FromForm] UserUpdateRequestDTO user, [FromHeader] String token)
         {
             if (String.IsNullOrWhiteSpace(token))
             {
@@ -80,14 +96,12 @@ namespace Pharmacy.Controllers
             {
                 return BadRequest(new { success = false, message = "Invalid Empty Name", code = invalidValue });
             }
-            var currentUser = users.Where(x => x.Id == user.Id && x.IsDeleted == false).SingleOrDefault();
+            var currentUser = users.Where(x => x.Id == Id && x.IsDeleted == false).SingleOrDefault();
             if (currentUser == null)
             {
                 return NotFound(new { success = false, message = "User Not Found", code = notFound });
             }
-            currentUser.Name = user.Name;
-            currentUser.Location = user.Location;
-
+            Mapper.Map(user, currentUser);
             return Ok(new { success = true, message = "update successfull", code = success, user = currentUser });
         }
 
