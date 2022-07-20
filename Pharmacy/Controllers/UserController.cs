@@ -47,7 +47,8 @@ namespace Pharmacy.Controllers
                 code = success,
                 users = users
                 //.Where(x => x.IsDeleted = false)
-                .Select(x => UserHelper.MapDomainToResponse(x))
+                // .Select(x => UserHelper.MapDomainToResponse(x))
+                .Select(x => Mapper.Map<UserResponseDTO>(x))
             });
         }
 
@@ -67,6 +68,22 @@ namespace Pharmacy.Controllers
 
         }
 
+        [HttpGet(), Route("searchUser")]
+        public IActionResult SearchUser([FromQuery] String Name)
+        {
+            var query = users.AsQueryable();
+            query = query.Where(x => x.IsDeleted == false);
+            if (!String.IsNullOrWhiteSpace(Name))
+            {
+                query = query.Where(x => x.Name.Contains(Name, StringComparison.OrdinalIgnoreCase));
+            }
+            query = query.OrderBy(x => x.Name) // تصاعدي
+                .ThenBy(x => x.Location);
+            ;
+            //  query = query.OrderByDescending(x => x.Name); // تنازلي
+            return Ok(new { success = true, message = "success", code = success, user = query.Select(x => Mapper.Map<UserResponseDTO>(x)) });
+        }
+
         [HttpPost(), Route("createUser")]
         public IActionResult AddUser([FromForm] UserAddRequestDTO user, [FromHeader] String token)
         {
@@ -74,10 +91,10 @@ namespace Pharmacy.Controllers
             {
                 return Unauthorized(new { success = false, message = "Invalid token", code = unauthorized });
             }
-            if (String.IsNullOrWhiteSpace(user.Name))
+            /*if (String.IsNullOrWhiteSpace(user.Name))
             {
                 return BadRequest(new { success = false, message = "Invalid Empty Name", code = invalidValue });
-            }
+            }*/
             var currentUser = Mapper.Map<User>(user);
             currentUser.Id = users.Max(x => x.Id) + 1;
             users.Add(currentUser);

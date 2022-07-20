@@ -33,7 +33,7 @@ namespace Pharmacy.Controllers
             return Ok(new { success = true, message = "success", code = UserController.success, skills = userSkills });
         }
 
-        [HttpGet("{skillsId}"), Route("getUserSkillsById")]
+        [HttpGet(), Route("getUserSkillsById")]
         public IActionResult getUserSkillsById([FromQuery()] int userId, [FromQuery()] int skillsId)
         {
             var currentSkills = skills.Where(x => x.UserId == userId && x.Id == skillsId).FirstOrDefault();
@@ -44,8 +44,8 @@ namespace Pharmacy.Controllers
             return Ok(new { success = true, message = "success", code = UserController.success, skills = currentSkills });
         }
 
-        [HttpGet("{skillsId}"), Route("getSkillsById")]
-        public IActionResult getSkillsById([FromQuery()] int skillsId)
+        [HttpGet(), Route("getSkillsById/{skillsId}")]
+        public IActionResult getSkillsById([FromRoute] int skillsId)
         {
             var currentSkills = skills.Where(x => x.Id == skillsId).FirstOrDefault();
             if (currentSkills == null)
@@ -55,8 +55,8 @@ namespace Pharmacy.Controllers
             return Ok(new { success = true, message = "success", code = UserController.success, skills = currentSkills });
         }
 
-        [HttpPost(), Route("addSkills")]
-        public IActionResult addSkills(int Id, [FromForm] Skills newSkills, [FromHeader] String token)
+        [HttpPost(), Route("addSkills/{Id}")]
+        public IActionResult addSkills([FromRoute] int Id, [FromForm] Skills newSkills, [FromHeader] String token)
         {
             if (String.IsNullOrWhiteSpace(token))
             {
