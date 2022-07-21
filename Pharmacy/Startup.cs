@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Pharmacy.Models.Helper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +17,9 @@ namespace Pharmacy
 {
     public class Startup
     {
+
+        private String DBName { get; set; } = "Pharmacy";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -26,10 +31,15 @@ namespace Pharmacy
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers()
-             //   .AddXmlDataContractSerializerFormatters()
+                //   .AddXmlDataContractSerializerFormatters()
                 .AddNewtonsoftJson();
 
             services.AddAutoMapper(typeof(Startup));
+
+            services.AddDbContext<DBContext>(
+                opt => opt.UseSqlServer(
+                    @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=" + DBName + ";Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False"
+                    ));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

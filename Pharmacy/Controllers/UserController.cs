@@ -27,7 +27,15 @@ namespace Pharmacy.Controllers
         {
             new User(){Id = 1,Name = "Ibrahim" ,Location = "Gaza", IsDeleted = false  },
             new User(){Id = 2,Name = "Ahmed" ,Location = "KhanYunis", IsDeleted = false },
-            new User(){Id = 3,Name = "Ali" ,Location = "Rafah", IsDeleted = true },
+            new User(){Id = 3,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
+            new User(){Id = 4,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
+            new User(){Id = 5,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
+            new User(){Id = 6,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
+            new User(){Id = 7,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
+            new User(){Id = 8,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
+            new User(){Id = 9,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
+            new User(){Id = 10,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
+            new User(){Id = 11,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
         };
 
         public readonly IMapper Mapper;
@@ -37,19 +45,28 @@ namespace Pharmacy.Controllers
             Mapper = mapper;
         }
 
-        [HttpGet(), Route("getAllUsers")]
-        public IActionResult getAllUsers()
+        [HttpGet(nameof(getAllUsers), Name = "getAllUsers"), Route("getAllUsers")]
+        public IActionResult getAllUsers([FromQuery] PagingDTO Page)
         {
-            return Ok(new
+            var list = users.AsQueryable()
+                .Where(x => x.IsDeleted == false)
+                .Select(x => Mapper.Map<UserResponseDTO>(x));
+
+            var respone = new Response<UserResponseDTO>(list, Page)
             {
                 success = true,
                 message = "success",
-                code = success,
-                users = users
-                //.Where(x => x.IsDeleted = false)
-                // .Select(x => UserHelper.MapDomainToResponse(x))
-                .Select(x => Mapper.Map<UserResponseDTO>(x))
-            });
+                code = success
+            };
+            if (respone.Pageing.hasNextPage)
+            {
+                respone.Pageing.NextPageUrl = Url.Link("getAllUsers", new { Page.RowCount, PageNumber = Page.PageNumber + 1 });
+            }
+            if (respone.Pageing.hasPrevPage)
+            {
+                respone.Pageing.PrevPageUrl = Url.Link("getAllUsers", new { Page.RowCount, PageNumber = Page.PageNumber - 1 });
+            }
+            return Ok(respone);
         }
 
         [HttpGet(), Route("getUserById/{Id}")]
@@ -77,10 +94,9 @@ namespace Pharmacy.Controllers
             {
                 query = query.Where(x => x.Name.Contains(Name, StringComparison.OrdinalIgnoreCase));
             }
-            query = query.OrderBy(x => x.Name) // تصاعدي
+            query = query.OrderBy(x => x.Name)
                 .ThenBy(x => x.Location);
             ;
-            //  query = query.OrderByDescending(x => x.Name); // تنازلي
             return Ok(new { success = true, message = "success", code = success, user = query.Select(x => Mapper.Map<UserResponseDTO>(x)) });
         }
 
@@ -138,7 +154,7 @@ namespace Pharmacy.Controllers
             return Ok(new { success = true, message = "update successfull", code = success, user = currentUser });
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete(), Route("deleteUser/{Id}")]
         public IActionResult deleteUser(int id, [FromHeader] String token)
         {
             if (String.IsNullOrWhiteSpace(token))
@@ -155,7 +171,6 @@ namespace Pharmacy.Controllers
             {
                 SkillsController.skills.Remove(currentSkills);
             }
-            //   users.Remove(currentUser);
             currentUser.IsDeleted = true;
             return Ok(new { success = true, message = "delete successfull", code = success, user = currentUser });
         }
