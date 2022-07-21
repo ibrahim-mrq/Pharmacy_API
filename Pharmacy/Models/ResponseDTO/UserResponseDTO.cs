@@ -10,7 +10,7 @@ namespace Pharmacy.Models.ResponseDTO
         public String Email { get; set; }
         public String Phone { get; set; } 
         public String Location { get; set; }
-        public int BarthDate { get; set; }
+        public String BarthDate { get; set; }
         public String Password { get; set; }
         public List<Skills> Skills { get; set; }
         public int SkillsSize { get; set; }
