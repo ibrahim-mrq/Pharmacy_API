@@ -62,10 +62,10 @@ namespace Pharmacy.Controllers
             {
                 return Unauthorized(new { success = false, message = "Invalid token", code = UserController.unauthorized });
             }
-            if (!UserController.users.Any(x => x.Id == Id))
+           /* if (!UserController.users.Any(x => x.Id == Id))
             {
                 return NotFound(new { success = false, message = "User Not Exists ", code = UserController.notFound });
-            }
+            }*/
             if (Id != newSkills.UserId)
             {
                 return BadRequest(new { success = false, message = "Invalid User Id ", code = UserController.invalidValue });
@@ -76,12 +76,13 @@ namespace Pharmacy.Controllers
             }
             skills.Add(newSkills);
 
-            var currentUser = UserController.users.Where(x => x.Id == Id).SingleOrDefault();
+            /*var currentUser = UserController.users.Where(x => x.Id == Id).SingleOrDefault();
             if (currentUser == null)
             {
                 return NotFound(new { success = false, message = "User Not Found", code = UserController.notFound });
             }
             currentUser.Skills.Add(newSkills);
+            */
             return CreatedAtAction(nameof(getSkillsById), new { UserId = Id, skillsId = newSkills.Id },
                 new { success = true, message = "Created", code = UserController.created, skills = newSkills });
         }

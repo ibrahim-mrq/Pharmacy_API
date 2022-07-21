@@ -23,7 +23,7 @@ namespace Pharmacy.Controllers
         public static int notFound = 404;
         public static int conflict = 502;
 
-        public static List<User> users = new List<User>()
+        /*public static List<User> users = new List<User>()
         {
             new User(){Id = 1,Name = "Ibrahim" ,Location = "Gaza", IsDeleted = false  },
             new User(){Id = 2,Name = "Ahmed" ,Location = "KhanYunis", IsDeleted = false },
@@ -36,19 +36,21 @@ namespace Pharmacy.Controllers
             new User(){Id = 9,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
             new User(){Id = 10,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
             new User(){Id = 11,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
-        };
+        };*/
 
         public readonly IMapper Mapper;
+        public readonly DBContext dbContext;
 
-        public UserController(IMapper mapper)
+        public UserController(IMapper mapper , DBContext DBContext)
         {
             Mapper = mapper;
+            this.dbContext = DBContext;
         }
 
         [HttpGet(nameof(getAllUsers), Name = "getAllUsers"), Route("getAllUsers")]
         public IActionResult getAllUsers([FromQuery] PagingDTO Page)
         {
-            var list = users.AsQueryable()
+            var list = dbContext.Users.AsQueryable()
                 .Where(x => x.IsDeleted == false)
                 .Select(x => Mapper.Map<UserResponseDTO>(x));
 
@@ -76,7 +78,7 @@ namespace Pharmacy.Controllers
             {
                 return Unauthorized(new { success = false, message = "Invalid token", code = unauthorized });
             }
-            var currentUser = users.Where(x => x.Id == Id && x.IsDeleted == false).SingleOrDefault();
+            var currentUser = dbContext.Users.Where(x => x.Id == Id && x.IsDeleted == false).SingleOrDefault();
             if (currentUser == null)
             {
                 return BadRequest(new { success = false, message = "user not found", code = invalidValue });
@@ -88,7 +90,7 @@ namespace Pharmacy.Controllers
         [HttpGet(), Route("searchUser")]
         public IActionResult SearchUser([FromQuery] String Name)
         {
-            var query = users.AsQueryable();
+            var query = dbContext.Users.AsQueryable();
             query = query.Where(x => x.IsDeleted == false);
             if (!String.IsNullOrWhiteSpace(Name))
             {
@@ -107,13 +109,9 @@ namespace Pharmacy.Controllers
             {
                 return Unauthorized(new { success = false, message = "Invalid token", code = unauthorized });
             }
-            /*if (String.IsNullOrWhiteSpace(user.Name))
-            {
-                return BadRequest(new { success = false, message = "Invalid Empty Name", code = invalidValue });
-            }*/
             var currentUser = Mapper.Map<User>(user);
-            currentUser.Id = users.Max(x => x.Id) + 1;
-            users.Add(currentUser);
+            currentUser.Id = dbContext.Users.Max(x => x.Id) + 1;
+            dbContext.Users.Add(currentUser);
             return CreatedAtAction(nameof(GetUserById), new { Id = currentUser.Id },
                 new { success = true, message = "Created", code = created, user = UserHelper.MapDomainToResponse(currentUser) });
         }
@@ -129,7 +127,7 @@ namespace Pharmacy.Controllers
             {
                 return BadRequest(new { success = false, message = "Invalid Empty Name", code = invalidValue });
             }
-            var currentUser = users.Where(x => x.Id == Id && x.IsDeleted == false).SingleOrDefault();
+            var currentUser = dbContext.Users.Where(x => x.Id == Id && x.IsDeleted == false).SingleOrDefault();
             if (currentUser == null)
             {
                 return NotFound(new { success = false, message = "User Not Found", code = notFound });
@@ -145,7 +143,7 @@ namespace Pharmacy.Controllers
             {
                 return Unauthorized(new { success = false, message = "Invalid token", code = unauthorized });
             }
-            var currentUser = users.Where(x => x.Id == id && x.IsDeleted == false).SingleOrDefault();
+            var currentUser = dbContext.Users.Where(x => x.Id == id && x.IsDeleted == false).SingleOrDefault();
             if (currentUser == null)
             {
                 return NotFound(new { success = false, message = "User Not Found", code = notFound });
@@ -161,7 +159,7 @@ namespace Pharmacy.Controllers
             {
                 return Unauthorized(new { success = false, message = "Invalid token", code = unauthorized });
             }
-            var currentUser = users.Where(x => x.Id == id && x.IsDeleted == false).SingleOrDefault();
+            var currentUser = dbContext.Users.Where(x => x.Id == id && x.IsDeleted == false).SingleOrDefault();
             if (currentUser == null)
             {
                 return NotFound(new { success = false, message = "User Not Found", code = notFound });

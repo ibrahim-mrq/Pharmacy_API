@@ -38,7 +38,7 @@ namespace Pharmacy
 
             services.AddDbContext<DBContext>(
                 opt => opt.UseSqlServer(
-                    @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=" + DBName + ";Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False"
+                    @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Pharmacy;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False"
                     ));
         }
 
