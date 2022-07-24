@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Pharmacy.Models;
 using Pharmacy.Models.Helper;
 using Pharmacy.Models.RequestDTO;
@@ -23,33 +24,23 @@ namespace Pharmacy.Controllers
         public static int notFound = 404;
         public static int conflict = 502;
 
-        /*public static List<User> users = new List<User>()
-        {
-            new User(){Id = 1,Name = "Ibrahim" ,Location = "Gaza", IsDeleted = false  },
-            new User(){Id = 2,Name = "Ahmed" ,Location = "KhanYunis", IsDeleted = false },
-            new User(){Id = 3,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
-            new User(){Id = 4,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
-            new User(){Id = 5,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
-            new User(){Id = 6,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
-            new User(){Id = 7,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
-            new User(){Id = 8,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
-            new User(){Id = 9,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
-            new User(){Id = 10,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
-            new User(){Id = 11,Name = "Ali" ,Location = "Rafah", IsDeleted = false },
-        };*/
 
         public readonly IMapper Mapper;
         public readonly DBContext dbContext;
+        private readonly IConfiguration configuration;
 
-        public UserController(IMapper mapper , DBContext DBContext)
+        public UserController(IMapper mapper, DBContext DBContext, IConfiguration configuration)
         {
             Mapper = mapper;
             this.dbContext = DBContext;
+            this.configuration = configuration;
         }
 
         [HttpGet(nameof(getAllUsers), Name = "getAllUsers"), Route("getAllUsers")]
         public IActionResult getAllUsers([FromQuery] PagingDTO Page)
         {
+            var ApiCompany = configuration.GetValue<String>("ApiSettings:ApiCompany");
+
             var list = dbContext.Users.AsQueryable()
                 .Where(x => x.IsDeleted == false)
                 .Select(x => Mapper.Map<UserResponseDTO>(x));
@@ -110,8 +101,8 @@ namespace Pharmacy.Controllers
                 return Unauthorized(new { success = false, message = "Invalid token", code = unauthorized });
             }
             var currentUser = Mapper.Map<User>(user);
-            currentUser.Id = dbContext.Users.Max(x => x.Id) + 1;
             dbContext.Users.Add(currentUser);
+            dbContext.SaveChanges();
             return CreatedAtAction(nameof(GetUserById), new { Id = currentUser.Id },
                 new { success = true, message = "Created", code = created, user = UserHelper.MapDomainToResponse(currentUser) });
         }
@@ -133,6 +124,7 @@ namespace Pharmacy.Controllers
                 return NotFound(new { success = false, message = "User Not Found", code = notFound });
             }
             Mapper.Map(user, currentUser);
+            dbContext.SaveChanges();
             return Ok(new { success = true, message = "update successfull", code = success, user = currentUser });
         }
 
@@ -153,7 +145,7 @@ namespace Pharmacy.Controllers
         }
 
         [HttpDelete(), Route("deleteUser/{Id}")]
-        public IActionResult deleteUser(int id, [FromHeader] String token)
+        public IActionResult DeleteUser(int id, [FromHeader] String token)
         {
             if (String.IsNullOrWhiteSpace(token))
             {
@@ -170,6 +162,7 @@ namespace Pharmacy.Controllers
                 SkillsController.skills.Remove(currentSkills);
             }
             currentUser.IsDeleted = true;
+            dbContext.SaveChanges();
             return Ok(new { success = true, message = "delete successfull", code = success, user = currentUser });
         }
 
