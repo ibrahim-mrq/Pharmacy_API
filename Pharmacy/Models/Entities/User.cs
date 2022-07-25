@@ -8,7 +8,6 @@ namespace Pharmacy.Models
     public class User
     {
         [Key]
-    //    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         [Required]
         public String Name { get; set; } = "";
@@ -23,7 +22,8 @@ namespace Pharmacy.Models
         [Required]
         public String BarthDate { get; set; } = "";
         [Required]
-        public String Password { get; set; } = "";
+        public byte[] PasswordHash { get; set; }
+        public byte[] PasswordSalt { get; set; }
         public List<Skills> Skills { get; set; } = new List<Skills>();
         public int SkillsSize { get; set; } = 0;
         public Boolean IsDeleted { get; set; }

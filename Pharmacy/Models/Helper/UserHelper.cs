@@ -16,7 +16,7 @@ namespace Pharmacy.Models.Helper
                 Phone = user.Phone,
                 BarthDate = user.BarthDate,
                 Email= user.Email,
-                Password = user.Password,
+                Password = user.PasswordHash.ToString(),
                 SkillsSize = (user.Skills == null) ? 0 : user.Skills.Count()
             };
 

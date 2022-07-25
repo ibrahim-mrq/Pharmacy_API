@@ -13,7 +13,5 @@ namespace Pharmacy.Models.Helper
         public DbSet<User> Users { get; set; }
         public DbSet<Skills> Skills { get; set; }
 
-
-
     }
 }
